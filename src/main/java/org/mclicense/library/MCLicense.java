@@ -1,6 +1,7 @@
 package org.mclicense.library;
 
 import org.bukkit.plugin.java.JavaPlugin;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
@@ -12,6 +13,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.logging.Logger;
 
 public class MCLicense {
     private static final String API_URL = "https://api.mclicense.org/validate/";
@@ -23,20 +25,20 @@ public class MCLicense {
             if (!licenseFile.exists()) {
                 plugin.getDataFolder().mkdirs();
                 licenseFile.createNewFile();
-                System.out.println("[MC License] License key is empty! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                Logger.getLogger("MC License").info("License key is empty! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
                 return false;
             }
 
             String key = new String(Files.readAllBytes(Paths.get(licenseFile.getPath())), StandardCharsets.UTF_8).trim();
             if (key.isEmpty()) {
-                System.out.println("[MC License] License key is empty! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                Logger.getLogger("MC License").info("License key is empty! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
                 return false;
             }
 
             String serverAddress = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
             return validateKey(key, serverAddress);
         } catch (IOException e) {
-            System.out.println("[MC License] Error reading license file");
+            Logger.getLogger("MC License").info("Error reading license file");
             return false;
         }
     }
@@ -46,19 +48,19 @@ public class MCLicense {
             if (!Files.exists(filePath)) {
                 Files.createDirectories(filePath.getParent());
                 Files.createFile(filePath);
-                System.out.println("[MC License] License key is empty! Place your key in the following file and restart the server: " + filePath);
+                Logger.getLogger("MC License").info("License key is empty! Place your key in the following file and restart the server: " + filePath);
                 return false;
             }
 
             String key = new String(Files.readAllBytes(filePath), StandardCharsets.UTF_8).trim();
             if (key.isEmpty()) {
-                System.out.println("[MC License] License key is empty! Place your key in the following file and restart the server: " + filePath);
+                Logger.getLogger("MC License").info("License key is empty! Place your key in the following file and restart the server: " + filePath);
                 return false;
             }
 
             return validateKey(key, serverIp);
         } catch (IOException e) {
-            System.out.println("[MC License] Error reading license file");
+            Logger.getLogger("MC License").info("Error reading license file");
             return false;
         }
     }
@@ -96,12 +98,12 @@ public class MCLicense {
                         response.indexOf("\"message\":\"") + "\"message\":\"".length(),
                         response.indexOf("\"}")
                 );
-                System.out.println("[MC License] Key validation " + (connection.getResponseCode() == 200 ? "succeeded" : "failed") + " (" + message + ")");
+                Logger.getLogger("MC License").info("Key validation " + (connection.getResponseCode() == 200 ? "succeeded" : "failed") + " (" + message + ")");
             }
 
             return connection.getResponseCode() == 200;
         } catch (Exception e) {
-            System.out.println("[MC License] Internal error validating license key");
+            Logger.getLogger("MC License").info("Internal error validating license key");
             return false;
         }
     }
