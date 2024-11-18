@@ -1,4 +1,4 @@
-package org.mclicense.library.validator;
+package org.mclicense.library;
 
 import java.nio.charset.StandardCharsets;
 import java.security.KeyFactory;
