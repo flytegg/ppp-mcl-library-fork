@@ -1,9 +1,146 @@
 package org.mclicense.library;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.json.JSONObject;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.InputStreamReader;
+import java.net.HttpURLConnection;
+import java.net.InetAddress;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
+import java.security.KeyFactory;
+import java.security.PublicKey;
+import java.security.Signature;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Base64;
 
 public class MCLicense {
+
+    /**
+     * Validates a license key with the MCLicense validation server.
+     * <p>
+     * This function performs several checks:
+     * <ul>
+     *     <li>Verifies the existence and content of the license file</li>
+     *     <li>Validates the license key with the remote server</li>
+     *     <li>Verifies the response signature for security</li>
+     *     <li>Ensures the response matches the requested plugin and key</li>
+     *     <li>Checks if the license is valid and not expired, reached max IPs, etc</li>
+     * </ul>
+     *
+     * The license key should be placed in a file named 'mclicense.txt' in the plugin's data folder by the user.
+     *
+     * @param plugin The JavaPlugin instance requesting validation
+     * @param pluginId The unique identifier assigned to your plugin by MCLicense
+     * @return true if the license is valid and active, false otherwise
+     *
+     * @throws Exception for various validation failures (caught internally)
+     */
     public static boolean validateKey(JavaPlugin plugin, String pluginId) {
-        return LicenseValidator.validate(plugin, pluginId);
+        try {
+            // Check if license file exists or create it
+            File licenseFile = new File(plugin.getDataFolder(), "mclicense.txt");
+            if (!licenseFile.exists()) {
+                plugin.getDataFolder().mkdirs();
+                licenseFile.createNewFile();
+                Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                return false;
+            }
+
+            // Read the license key from the file
+            String key = new String(Files.readAllBytes(Paths.get(licenseFile.getPath())), StandardCharsets.UTF_8).trim();
+            if (key.isEmpty()) {
+                Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                return false;
+            }
+
+            // Send request to the validation server
+            String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
+            URL url = new URL(String.format(Constants.API_URL, pluginId, key) + "?serverIp=" + serverIp);
+
+            HttpURLConnection connection = (HttpURLConnection) url.openConnection();
+            connection.setRequestMethod("GET");
+            connection.setConnectTimeout(Constants.TIMEOUT_MS);
+            connection.setReadTimeout(Constants.TIMEOUT_MS);
+
+            // Read the response from the server
+            String response;
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(connection.getResponseCode() >= 400 ?
+                    connection.getErrorStream() : connection.getInputStream()))) {
+                StringBuilder responseBuilder = new StringBuilder();
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    responseBuilder.append(line);
+                }
+                response = responseBuilder.toString();
+            }
+
+            // Reject if the response code is not 200 (pre-planned for rejections such as expiry date, max IPs, etc)
+            if (connection.getResponseCode() != 200) {
+                try {
+                    Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (" + new JSONObject(response).getString("message") + ")");
+                } catch (Exception e) {
+                    Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Server error)");
+                }
+                return false;
+            }
+
+            JSONObject responseJson = new JSONObject(response);
+
+            // Verify key and pluginId are what was sent
+            if (!responseJson.getString("key").equals(key) || !responseJson.getString("pluginId").equals(pluginId)) {
+                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Key or pluginId mismatch)");
+                return false;
+            }
+
+            // Timestamp based validation (X second window)
+            if (System.currentTimeMillis() - responseJson.getLong("timestamp") > Constants.TIMESTAMP_VALIDITY_SECONDS * 1000) {
+                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Received timestamp is too old)");
+                return false;
+            }
+
+            // Verify the response signature
+            String signature = responseJson.getString("signature");
+
+            JSONObject dataToVerify = new JSONObject();
+            dataToVerify.put("key", responseJson.getString("key"));
+            dataToVerify.put("pluginId", responseJson.getString("pluginId"));
+            dataToVerify.put("status", responseJson.getString("status"));
+            dataToVerify.put("message", responseJson.getString("message"));
+            dataToVerify.put("timestamp", responseJson.getLong("timestamp"));
+
+            String data = dataToVerify.toString();
+
+            String publicKeyPEM = Constants.PUBLIC_KEY
+                    .replace("-----BEGIN PUBLIC KEY-----\n", "")
+                    .replace("\n-----END PUBLIC KEY-----", "")
+                    .replaceAll("\n", "");
+
+            byte[] publicKeyBytes = Base64.getDecoder().decode(publicKeyPEM);
+            X509EncodedKeySpec keySpec = new X509EncodedKeySpec(publicKeyBytes);
+            KeyFactory keyFactory = KeyFactory.getInstance("RSA");
+            PublicKey publicKey = keyFactory.generatePublic(keySpec);
+
+            Signature sig = Signature.getInstance("SHA256withRSA");
+            sig.initVerify(publicKey);
+            sig.update(data.getBytes(StandardCharsets.UTF_8));
+
+            boolean isValid = sig.verify(Base64.getDecoder().decode(signature));
+            if (!isValid) {
+                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Signature mismatch)");
+                return false;
+            }
+
+            // All approved by MC License!
+            Constants.LOGGER.info("License validation succeeded for " + plugin.getName() + "!");
+            return true;
+        } catch (Exception e) {
+            Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (System error)");
+            return false;
+        }
     }
 }
