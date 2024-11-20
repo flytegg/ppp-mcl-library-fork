@@ -9,6 +9,7 @@ import java.io.InputStreamReader;
 import java.net.HttpURLConnection;
 import java.net.InetAddress;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -17,6 +18,7 @@ import java.security.PublicKey;
 import java.security.Signature;
 import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
+import java.util.UUID;
 
 public class MCLicense {
 
@@ -59,8 +61,11 @@ public class MCLicense {
             }
 
             // Send request to the validation server
+            String nonce = UUID.randomUUID().toString();
             String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
-            URL url = new URL(String.format(Constants.API_URL, pluginId, key) + "?serverIp=" + serverIp);
+            URL url = new URL(String.format(Constants.API_URL, pluginId, key) +
+                    "?serverIp=" + URLEncoder.encode(serverIp, "UTF-8") +
+                    "&nonce=" + URLEncoder.encode(nonce, "UTF-8"));
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
@@ -91,15 +96,15 @@ public class MCLicense {
 
             JSONObject responseJson = new JSONObject(response);
 
-            // Verify key and pluginId are what was sent
-            if (!responseJson.getString("key").equals(key) || !responseJson.getString("pluginId").equals(pluginId)) {
-                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Key or pluginId mismatch)");
+            // Verify nonce is what was sent
+            if (!responseJson.getString("nonce").equals(nonce)) {
+                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Nonce mismatch)");
                 return false;
             }
 
-            // Timestamp based validation (X second window)
-            if (System.currentTimeMillis() - responseJson.getLong("timestamp") > Constants.TIMESTAMP_VALIDITY_SECONDS * 1000) {
-                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Received timestamp is too old)");
+            // Verify key and pluginId are what was sent
+            if (!responseJson.getString("key").equals(key) || !responseJson.getString("pluginId").equals(pluginId)) {
+                Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (Key or pluginId mismatch)");
                 return false;
             }
 
@@ -111,7 +116,7 @@ public class MCLicense {
             dataToVerify.put("pluginId", responseJson.getString("pluginId"));
             dataToVerify.put("status", responseJson.getString("status"));
             dataToVerify.put("message", responseJson.getString("message"));
-            dataToVerify.put("timestamp", responseJson.getLong("timestamp"));
+            dataToVerify.put("nonce", responseJson.getString("nonce"));
 
             String data = dataToVerify.toString();
 
