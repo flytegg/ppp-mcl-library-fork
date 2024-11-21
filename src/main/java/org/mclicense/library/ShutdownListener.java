@@ -21,7 +21,7 @@ public class ShutdownListener implements Listener {
             try {
                 HeartbeatManager.sendHeartbeat(true);
             } catch (Exception e) {
-                Constants.LOGGER.severe("Failed to send shutdown heartbeat: " + e.getMessage());
+                throw new RuntimeException(e);
             }
         }
     }
