@@ -21,6 +21,8 @@ class HeartbeatManager {
     static BukkitTask heartbeatTask;
 
     protected static void startHeartbeat(JavaPlugin plugin, String pluginId, String licenseKey, String serverIp) {
+        plugin.getServer().getPluginManager().registerEvents(new ShutdownListener(plugin), plugin);
+
         HeartbeatManager.pluginId = pluginId;
         HeartbeatManager.licenseKey = licenseKey;
         HeartbeatManager.serverIp = serverIp;
@@ -29,7 +31,7 @@ class HeartbeatManager {
             @Override
             public void run() {
                 try {
-                    sendHeartbeat();
+                    sendHeartbeat(false);
                 } catch (Exception e) {
                     Constants.LOGGER.warning("Failed to send heartbeat for " + plugin.getName() + ": " + e.getMessage());
                 }
@@ -37,11 +39,10 @@ class HeartbeatManager {
         }.runTaskTimerAsynchronously(plugin, Constants.HEARTBEAT_INTERVAL_SECONDS * 20, Constants.HEARTBEAT_INTERVAL_SECONDS * 20);
     }
 
-    private static void sendHeartbeat() throws Exception {
+    protected static void sendHeartbeat(boolean isShutdown) throws Exception {
         URL url = new URL(String.format(HEARTBEAT_URL, pluginId, licenseKey));
         HttpURLConnection connection = (HttpURLConnection) url.openConnection();
 
-        // Setup POST request
         connection.setRequestMethod("POST");
         connection.setRequestProperty("Content-Type", "application/json");
         connection.setConnectTimeout(TIMEOUT_MS);
@@ -51,11 +52,13 @@ class HeartbeatManager {
         // Create JSON payload
         JSONObject payload = new JSONObject();
         payload.put("serverIp", serverIp);
-        String jsonInputString = payload.toString();
+        if (isShutdown) {
+            payload.put("shutdown", true);
+        }
 
         // Send the heartbeat
         try (OutputStream os = connection.getOutputStream()) {
-            byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+            byte[] input = payload.toString().getBytes(StandardCharsets.UTF_8);
             os.write(input, 0, input.length);
         }
 
