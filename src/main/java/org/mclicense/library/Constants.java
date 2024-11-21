@@ -3,6 +3,21 @@ package org.mclicense.library;
 import java.util.logging.Logger;
 
 class Constants {
+    // Logger
+    static final Logger LOGGER = Logger.getLogger("MCLicense");
+
+    // API Endpoints
+    static final String API_BASE_URL = "https://api.mclicense.org";
+    static final String API_URL = API_BASE_URL + "/validate/%s/%s";  // For license validation (pluginId, key)
+    static final String HEARTBEAT_URL = API_BASE_URL + "/heartbeat/%s/%s";  // For heartbeat (pluginId, key)
+
+    // Connection Settings
+    static final int TIMEOUT_MS = 5000;  // 5 second timeout for HTTP requests
+
+    // Heartbeat Settings
+    static final int HEARTBEAT_INTERVAL_SECONDS = 30;
+
+    // RSA Public Key for signature verification
     static final String PUBLIC_KEY =
             "-----BEGIN PUBLIC KEY-----\n" +
             "MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEArhw7oQaOrgCzUxDi5D+N\n" +
@@ -13,8 +28,4 @@ class Constants {
             "0KZvQNIqzqTPBCR9VLZPBjFu6cYT/E/WUjjFROuRhi+7Xsa6tKLqoiO4VwJSrn5L\n" +
             "zwIDAQAB\n" +
             "-----END PUBLIC KEY-----";
-    static final String API_URL = "https://api.mclicense.org/validate/%s/%s";
-    static final int TIMEOUT_MS = 10000;
-    static final int TIMESTAMP_VALIDITY_SECONDS = 30;
-    static final Logger LOGGER = Logger.getLogger("MC License");
 }

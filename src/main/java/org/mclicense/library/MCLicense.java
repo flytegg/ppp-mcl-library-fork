@@ -21,7 +21,6 @@ import java.util.Base64;
 import java.util.UUID;
 
 public class MCLicense {
-
     /**
      * Validates a license key with the MCLicense validation server.
      * <p>
@@ -140,7 +139,7 @@ public class MCLicense {
                 return false;
             }
 
-            // All approved by MC License!
+            HeartbeatManager.startHeartbeat(plugin, pluginId, key, serverIp);
             Constants.LOGGER.info("License validation succeeded for " + plugin.getName() + "!");
             return true;
         } catch (Exception e) {
