@@ -48,8 +48,15 @@ public class MCLicense {
             if (!licenseFile.exists()) {
                 plugin.getDataFolder().mkdirs();
                 licenseFile.createNewFile();
-                Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
-                return false;
+
+                // If hardcoded license key is provided by marketplace, write to file and continue validation
+                String hardcodedLicense = MarketplaceProvider.getHardcodedLicense();
+                if (hardcodedLicense != null) {
+                    Files.write(Paths.get(licenseFile.getPath()), hardcodedLicense.getBytes(StandardCharsets.UTF_8));
+                } else {
+                    Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                    return false;
+                }
             }
 
             // Read the license key from the file
