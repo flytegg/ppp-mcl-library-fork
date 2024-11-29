@@ -66,12 +66,19 @@ public class MCLicense {
                 return false;
             }
 
-            // Send request to the validation server
+            // Send request to the validation server with properly encoded parameters
             String nonce = UUID.randomUUID().toString();
             String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
-            URL url = new URL(String.format(Constants.API_URL, pluginId, key) +
-                    "?serverIp=" + URLEncoder.encode(serverIp, "UTF-8") +
-                    "&nonce=" + URLEncoder.encode(nonce, "UTF-8"));
+
+            // Properly encode all URL components
+            String encodedPluginId = URLEncoder.encode(pluginId, StandardCharsets.UTF_8.toString());
+            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
+            String encodedServerIp = URLEncoder.encode(serverIp, StandardCharsets.UTF_8.toString());
+            String encodedNonce = URLEncoder.encode(nonce, StandardCharsets.UTF_8.toString());
+
+            URL url = new URL(String.format(Constants.API_URL, encodedPluginId, encodedKey) +
+                    "?serverIp=" + encodedServerIp +
+                    "&nonce=" + encodedNonce);
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
