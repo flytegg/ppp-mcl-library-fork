@@ -6,7 +6,7 @@ public class MarketplaceProvider {
     private static String pmLicense = "%%__LICENSE__%%";
 
     protected static String getHardcodedLicense() {
-        if (!pmPlaceholder.equals("%%__POLYMART__%%") && !pmLicense.equals("%%__LICENSE__%%")) {
+        if (pmPlaceholder.equals("1") && !pmLicense.startsWith("%%__")) {
             return "pm_" + pmLicense;
         }
         return null;
