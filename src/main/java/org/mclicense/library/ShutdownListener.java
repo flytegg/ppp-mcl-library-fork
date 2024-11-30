@@ -21,7 +21,7 @@ public class ShutdownListener implements Listener {
             try {
                 HeartbeatManager.sendHeartbeat(true);
             } catch (Exception e) {
-                throw new RuntimeException(e);
+                // Ignore
             }
         }
     }

@@ -62,7 +62,7 @@ class HeartbeatManager {
         }
 
         if (connection.getResponseCode() != 200) {
-            throw new Exception("Server returned code: " + connection.getResponseCode());
+            // Ignore
         }
     }
 }
