@@ -1,5 +1,6 @@
 package org.mclicense.library;
 
+import jdk.nashorn.internal.runtime.URIUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
@@ -71,14 +72,13 @@ public class MCLicense {
             String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
 
             // Properly encode all URL components
-            String encodedPluginId = URLEncoder.encode(pluginId, StandardCharsets.UTF_8.toString());
-            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString());
-            String encodedServerIp = URLEncoder.encode(serverIp, StandardCharsets.UTF_8.toString());
-            String encodedNonce = URLEncoder.encode(nonce, StandardCharsets.UTF_8.toString());
+            String encodedPluginId = URLEncoder.encode(pluginId, StandardCharsets.UTF_8.toString()).replace("+", "%20");
+            String encodedKey = URLEncoder.encode(key, StandardCharsets.UTF_8.toString()).replace("+", "%20");
+            String encodedServerIp = URLEncoder.encode(serverIp, StandardCharsets.UTF_8.toString()).replace("+", "%20");
 
             URL url = new URL(String.format(Constants.API_URL, encodedPluginId, encodedKey) +
                     "?serverIp=" + encodedServerIp +
-                    "&nonce=" + encodedNonce);
+                    "&nonce=" + nonce);
 
             HttpURLConnection connection = (HttpURLConnection) url.openConnection();
             connection.setRequestMethod("GET");
