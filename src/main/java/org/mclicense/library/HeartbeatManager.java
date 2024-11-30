@@ -32,7 +32,7 @@ class HeartbeatManager {
                 try {
                     sendHeartbeat(false);
                 } catch (Exception e) {
-                    Constants.LOGGER.warning("Failed to send heartbeat for " + plugin.getName() + ": " + e.getMessage());
+                    //Constants.LOGGER.warning("Failed to send heartbeat for " + plugin.getName() + ": " + e.getMessage());
                 }
             }
         }.runTaskTimerAsynchronously(plugin, Constants.HEARTBEAT_INTERVAL_SECONDS * 20, Constants.HEARTBEAT_INTERVAL_SECONDS * 20);
