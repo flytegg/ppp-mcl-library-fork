@@ -1,4 +1,4 @@
-package org.mclicense.library;
+package gg.flyte.pluginportal.mclicense;
 
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;

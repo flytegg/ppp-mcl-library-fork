@@ -1,4 +1,4 @@
-package org.mclicense.library;
+package gg.flyte.pluginportal.mclicense;
 
 // Supported marketplaces: Polymart
 public class MarketplaceProvider {

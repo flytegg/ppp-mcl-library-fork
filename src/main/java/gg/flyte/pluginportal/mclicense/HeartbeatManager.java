@@ -1,4 +1,4 @@
-package org.mclicense.library;
+package gg.flyte.pluginportal.mclicense;
 
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -10,8 +10,8 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import static org.mclicense.library.Constants.HEARTBEAT_URL;
-import static org.mclicense.library.Constants.TIMEOUT_MS;
+import static gg.flyte.pluginportal.mclicense.Constants.HEARTBEAT_URL;
+import static gg.flyte.pluginportal.mclicense.Constants.TIMEOUT_MS;
 
 class HeartbeatManager {
     private static String pluginId;

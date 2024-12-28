@@ -1,6 +1,5 @@
-package org.mclicense.library;
+package gg.flyte.pluginportal.mclicense;
 
-import jdk.nashorn.internal.runtime.URIUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
@@ -22,6 +21,40 @@ import java.util.Base64;
 import java.util.UUID;
 
 public class MCLicense {
+    public static String getRawLicenseKey(JavaPlugin plugin) {
+        try {
+            File licenseFile = new File(plugin.getDataFolder(), "mclicense.txt");
+            if (!licenseFile.exists()) {
+                plugin.getDataFolder().mkdirs();
+                licenseFile.createNewFile();
+
+                // If hardcoded license key is provided by marketplace, write to file and continue validation
+                String hardcodedLicense = MarketplaceProvider.getHardcodedLicense();
+                if (hardcodedLicense == null) {
+                    Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
+                    return null;
+                }
+
+                Files.write(Paths.get(licenseFile.getPath()), hardcodedLicense.getBytes(StandardCharsets.UTF_8));
+            }
+
+            // Read the license key from the file
+            String key = new String(Files.readAllBytes(Paths.get(licenseFile.getPath())), StandardCharsets.UTF_8).trim();
+            return key;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
+    public static String getIP(JavaPlugin plugin) {
+        try {
+            String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
+            return serverIp;
+        } catch (Exception e) {
+            return null;
+        }
+    }
+
     /**
      * Validates a license key with the MCLicense validation server.
      * <p>
@@ -45,23 +78,7 @@ public class MCLicense {
     public static boolean validateKey(JavaPlugin plugin, String pluginId) {
         try {
             // Check if license file exists or create it
-            File licenseFile = new File(plugin.getDataFolder(), "mclicense.txt");
-            if (!licenseFile.exists()) {
-                plugin.getDataFolder().mkdirs();
-                licenseFile.createNewFile();
-
-                // If hardcoded license key is provided by marketplace, write to file and continue validation
-                String hardcodedLicense = MarketplaceProvider.getHardcodedLicense();
-                if (hardcodedLicense == null) {
-                    Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
-                    return false;
-                }
-
-                Files.write(Paths.get(licenseFile.getPath()), hardcodedLicense.getBytes(StandardCharsets.UTF_8));
-            }
-
-            // Read the license key from the file
-            String key = new String(Files.readAllBytes(Paths.get(licenseFile.getPath())), StandardCharsets.UTF_8).trim();
+            String key = getRawLicenseKey(plugin);
             if (key.isEmpty()) {
                 Constants.LOGGER.info("License key is empty for " + plugin.getName() + "! Place your key in the 'mclicense.txt' file in the plugin folder and restart the server.");
                 return false;
@@ -69,7 +86,7 @@ public class MCLicense {
 
             // Send request to the validation server with properly encoded parameters
             String nonce = UUID.randomUUID().toString();
-            String serverIp = InetAddress.getLocalHost().getHostAddress() + ":" + plugin.getServer().getPort();
+            String serverIp = getIP(plugin);
 
             // Properly encode all URL components
             String encodedPluginId = URLEncoder.encode(pluginId, StandardCharsets.UTF_8.toString()).replace("+", "%20");
