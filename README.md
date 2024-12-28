@@ -1,1 +1,1 @@
-See the docs for how to use this library: https://docs.mclicense.org/quickstart
+# THIS IS NOT THE CORRECT LIBRARY, GOTO https://github.com/flytegg/mcl-library
