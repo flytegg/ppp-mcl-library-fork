@@ -3,7 +3,7 @@ plugins {
     id("maven-publish")
 }
 
-group = "gg.flyte.pluginportal"
+group = "gg.flyte.pluginportal.mclicense"
 version = "1.3.7"
 
 repositories {
