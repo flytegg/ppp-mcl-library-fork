@@ -175,6 +175,7 @@ public class MCLicense {
             return true;
         } catch (Exception e) {
             Constants.LOGGER.info("License validation failed for " + plugin.getName() + " (System error)");
+            e.printStackTrace();
             return false;
         }
     }
