@@ -1,6 +1,5 @@
 package org.mclicense.library;
 
-import jdk.nashorn.internal.runtime.URIUtils;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.json.JSONObject;
 
