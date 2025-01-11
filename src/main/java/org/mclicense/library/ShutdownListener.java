@@ -14,10 +14,7 @@ public class ShutdownListener implements Listener {
 
     @EventHandler
     public void onPluginDisable(PluginDisableEvent event) {
-        if (event.getPlugin() == activePlugin && HeartbeatManager.heartbeatTask != null) {
-            HeartbeatManager.heartbeatTask.cancel();
-            HeartbeatManager.heartbeatTask = null;
-
+        if (event.getPlugin() == activePlugin) {
             try {
                 HeartbeatManager.sendHeartbeat(true);
             } catch (Exception e) {
