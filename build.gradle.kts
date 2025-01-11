@@ -3,14 +3,15 @@ plugins {
     id("maven-publish")
 }
 
-group = "gg.flyte.pluginportal.mclicense"
-version = "1.3.9"
+group = "org.mclicense"
+version = "1.3.6"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
 }
 
 dependencies {
+    compileOnly("io.papermc.paper:paper-api:1.20.1-R0.1-SNAPSHOT")
     compileOnly("org.spigotmc:spigot-api:1.8.8-R0.1-SNAPSHOT")
     implementation("org.json:json:20240303")
 }
