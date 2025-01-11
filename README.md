@@ -1,1 +1,1 @@
-See the docs for how to use this library: https://docs.mclicense.org/quickstart
+See the docs for how to use this library: https://docs.mclicense.org
