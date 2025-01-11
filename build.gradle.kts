@@ -3,8 +3,8 @@ plugins {
     id("maven-publish")
 }
 
-group = "org.mclicense"
-version = "1.3.6"
+group = "gg.flyte.pluginportal.mclicense"
+version = "1.4.0"
 
 repositories {
     maven("https://repo.papermc.io/repository/maven-public/")
